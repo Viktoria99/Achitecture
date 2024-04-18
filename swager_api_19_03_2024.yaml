@@ -1,0 +1,1976 @@
+openapi: 3.0.0
+info:
+  title: Swagger Api
+  description: Сервисы приложения ""
+  version: 1.0.0
+servers:
+  - url: https://some-host.com/api/v1
+tags:
+  - name: UserService
+    description: Сервис авторизации и работы c профилем
+  - name: GrantService
+    description: Сервис раздачи прав
+  - name: FileService
+    description: Сервис работы c файлами
+  - name: ProjectService
+    description: Сервис проектов
+  - name: EventService
+    description: Сервис событий
+  - name: SubscriptionService
+    description: Сервис подписки
+paths:
+  /user/send-sms:
+    post:
+      tags:
+        - UserService
+      summary: Отправка sms c кодом
+      operationId: send-sms
+      requestBody:
+        required: true
+        description: Отправка sms c кодом
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                  phone:
+                    type: string
+                    format: string
+                    description: Номер телефона
+                    example: 8(988)456-25-12
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ServerError'
+  /user/sign-in-sms:
+    post:
+      tags:
+        - UserService
+      summary: Авторизация по sms-коду
+      operationId: sms-code
+      requestBody:
+          required: true
+          description: Авторизация по sms-коду
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    format: string
+                    description: Код из смс
+                    example: 452
+                  phone:
+                    type: string
+                    format: string
+                    description: Номер телефона
+                    example: 8(956)456-25-01
+      responses:
+        '200':
+          description: Успешное выполнение.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/AuthError'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /user/sign-in-account:
+    post:
+      tags:
+        - UserService
+      summary: Авторизация через акаунты Google, Telegram
+      operationId: auth
+      requestBody:
+        required: true
+        description: Авторизация через акаунты Google, Telegram 
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/UserLight'
+      responses:
+        '200':
+          description: Успешное выполнение.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '500':
+          description: Ошибка на стороне сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /user/token:
+    post:
+      tags:
+        - UserService
+      summary: Обновление refresh token
+      security:
+      - JWT: []
+      operationId: auth
+      requestBody:
+        required: true
+        description:  Обновление refresh token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh Token.
+                  example: "46841sdfgjsfa"
+      responses:
+        '200':
+          description: Успешное выполнение.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/AuthError'
+        '500':
+          description: Ошибка на стороне сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /user:
+    get:
+      tags:
+        - UserService
+      summary: Получение данных профиля
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/user_id"
+      operationId: profile
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    patch:
+      tags:
+        - UserService
+      summary: Обновление данных профиля
+      security:
+      - JWT: []
+      operationId: profile
+      requestBody:
+        required: true
+        description:  Обновление refresh token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - UserService
+      summary: Удаление данных профиля
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/user_id"
+      operationId: profile
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /user/confirm-phone:
+    get:
+      tags:
+        - UserService
+      summary: Подтверждение номера телефона
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/sms_code"
+      operationId: phone
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /user/confirm-email:
+    get:
+      tags:
+        - UserService
+      summary: Подтверждение email
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/user_email"
+        - $ref: "#/components/parameters/sms_code"
+      operationId: email
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /grant/roles?user_id:
+    get:
+      tags:
+        - GrantService
+      summary: Получить список ролей
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/user_id"
+      operationId: role
+      responses:
+        '200':
+          description: Успешное выполнение.
+          content:
+            application/json:
+              schema:
+                  $ref:  '#/components/schemas/Roles'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /grant/grants?role_id:
+    get:
+      tags:
+        - GrantService
+      summary: Получить список прав
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/role_id"
+      operationId: grant
+      responses:
+        '200':
+          description: Успешное выполнение.
+          content:
+            application/json:
+              schema:
+                $ref:  '#/components/schemas/Grants'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ServerError'
+  /file:
+    post:
+      tags:
+        - FileService
+      summary: Загрузить файл
+      operationId: file
+      security:
+      - JWT: []
+      requestBody:
+        required: true
+        description:  Файл
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/File'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaData'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    get:
+      tags:
+        - FileService
+      security:
+      - JWT: [] 
+      parameters:
+        - $ref: "#/components/parameters/file_name"
+      operationId: fileContent
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/File'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - FileService
+      security:
+      - JWT: [] 
+      parameters:
+        - $ref: "#/components/parameters/file_name"
+      operationId: fileContent
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /project:
+    post:
+      tags:
+        - ProjectService
+      summary: Создать проект
+      operationId: project
+      security:
+      - JWT: []
+      requestBody:
+        required: true
+        description:  Проект
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    get:
+      tags:
+        - ProjectService
+      summary: Получение данных проекта
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/project_ids"
+      operationId: progect_id
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    patch:
+      tags:
+        - ProjectService
+      summary: Обновление данных о проекте
+      security:
+      - JWT: []
+      operationId: profile
+      requestBody:
+        required: true
+        description:  Измененные атрибуты проекта
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - ProjectService
+      security:
+      - JWT: [] 
+      parameters:
+        - $ref: "#/components/parameters/project_ids"
+      operationId: deleteProject
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /project/participant:
+    post:
+      tags:
+        - ProjectService
+      summary: Добавить участника проекта
+      operationId: participant
+      security:
+        - JWT: []
+      requestBody:
+          required: true
+          description:  Участник
+          content:
+            multipart/form-data:
+              schema:
+                $ref: '#/components/schemas/Participant'
+      responses:
+          '200':
+            description: Выполнено успешно
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/'
+          '400':
+            description: Некорректные поля запроса
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/BadRequest'
+          '401':
+            description: Не авторизован
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AuthError'
+          '403':
+            description: Проведение операции запрещено.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Forbidden'
+          '429':
+            description: Превышен лимит запросов
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ManyRequests'
+          '500':
+            description: Ошибка сервера.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServerError'
+    get:
+      tags:
+        - ProjectService
+      summary: Получение участника проекта
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/participant_ids"
+      operationId: participant_id
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - ProjectService
+      security:
+      - JWT: [] 
+      parameters:
+        - $ref: "#/components/parameters/participant_ids"
+      operationId: deleteParticipant
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    patch:
+      tags:
+        - ProjectService
+      summary: Утверждение участника в проект
+      security:
+      - JWT: []
+      operationId: profile
+      requestBody:
+        required: true
+        description: Утверждение участника в проект.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Participant'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /alert:
+    get:
+      tags:
+        - AlertService
+      summary: Получение уведомлений
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/user_id"
+        - $ref: "#/components/parameters/alert_type"
+        - $ref: "#/components/parameters/dateStart"
+        - $ref: "#/components/parameters/dateEnd"
+      operationId: alert
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alerts'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /event:
+    post:
+      tags:
+        - EventService
+      summary: Создать событие
+      operationId: event
+      security:
+      - JWT: []
+      requestBody:
+        required: true
+        description:  Событие
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    get:
+      tags:
+        - EventService
+      summary: Получение данных события
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/event_ids"
+      operationId: event_id
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    patch:
+      tags:
+        - EventService
+      summary: Обновление данных о событии
+      security:
+      - JWT: []
+      operationId: event_update
+      requestBody:
+        required: true
+        description:  Измененные атрибуты события
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - EventService
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/event_ids"
+      operationId: deleteEvent
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /event/event_participant:
+    post:
+      tags:
+        - EventService
+      summary: Добавить участника события
+      operationId: event_participant
+      security:
+        - JWT: []
+      requestBody:
+          required: true
+          description:  Участник
+          content:
+            multipart/form-data:
+              schema:
+                $ref: '#/components/schemas/EventParticipants'
+      responses:
+          '200':
+            description: Выполнено успешно
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/'
+          '400':
+            description: Некорректные поля запроса
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/BadRequest'
+          '401':
+            description: Не авторизован
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AuthError'
+          '403':
+            description: Проведение операции запрещено.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Forbidden'
+          '429':
+            description: Превышен лимит запросов
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ManyRequests'
+          '500':
+            description: Ошибка сервера.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ServerError'
+    get:
+      tags:
+        - EventService
+      summary: Получение участника события
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/participant_ids"
+      operationId: event_participant_id
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventParticipants'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - EventService
+      security:
+      - JWT: []
+      parameters:
+        - $ref: "#/components/parameters/participant_ids"
+      operationId: deleteParticipant
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: Превышен лимит запросов
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/ManyRequests'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    patch:
+      tags:
+        - EventService
+      summary: Утверждение участника на событие
+      security:
+      - JWT: []
+      operationId: profile
+      requestBody:
+        required: true
+        description: Утверждение участника на событие.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventParticipants'
+      responses:
+        '200':
+          description: Выполнено успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: Некорректные поля запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: Проведение операции запрещено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: Информация не найдена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: Ошибка сервера.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /subscription:
+    post:
+      tags:
+        - SubscriptionService
+      summary: Создать подписку
+      operationId: add_subscription
+      security:
+        - JWT: []
+      requestBody:
+          required: true
+          description:  Подписка
+          content:
+            multipart/form-data:
+              schema:
+                $ref: '#/components/schemas/EventParticipants'
+components:
+  securitySchemes:
+      JWT:
+        type: apiKey
+        in: header
+        name: Authorization
+  schemas:
+    Event:
+      description: Событие
+      properties:
+        title:
+          format: string
+          type: string
+          description: Загловок
+          example: Биенале
+        dateStart:
+          format: date
+          type: string
+          description: Дата начала события + вермя
+          example: 10.03.2020 12:00
+        dateEnd:
+          format: date
+          type: string
+          description: Дата окончания события + вермя
+          example: 10.03.2020 18:00
+        periodRepeat:
+          format: int32
+          type: integer
+          description: Период ожидания повтора события
+          example: 135
+        description:
+          format: string
+          type: string
+          description: Описание события
+          example: Концерт и выставка запланированы на 15-ое ноября
+        adress:
+          format: string
+          type: string
+          description: Адрес события
+          example: г.Москва, ул. Ленинградский проспект д.10а
+        sum:
+          format: money
+          type: integer
+          description: Стоимость события
+          example: 1 500 000 р.
+        link:
+          format: string
+          type: string
+          description: Ссылка на страницу события
+          example: /application/event/art
+        isPublic:
+          format: boolean
+          type: boolean
+          description: Видимость карточки события
+          example: true, false
+        isOwl:
+          format: boolean
+          type: boolean
+          description: Включен/Выключен режим Сова
+          example: true, false
+        projectId:
+          format: int32
+          type: integer
+          description: Id проекта
+          example: 3782
+        colorId:
+          format: int32
+          type: integer
+          description: Id цвета проекта
+          example: 3782
+        isAccept:
+          format: boolean
+          type: boolean
+          description: Признак подтверждения события
+          example: true, false
+        performanceDate:
+          format: date
+          type: string
+          description: Дата события, на которую утвердили артиста
+          example: 10.03.2020 18:00
+    Subscription:
+      description: Подписка
+      properties:
+        subscriptionId:
+          format: int32
+          type: integer
+          description: Id вида подписки
+          example: 15898
+        isActive:
+          format: boolean
+          type: boolean
+          description: Статус активности
+          example: true
+        userId:
+          format: int32
+          type: integer
+          description: Id клиента
+          example: 4568
+    EventParticipants:
+      description: Список участников
+      properties:
+        messages:
+          type: array
+          items:
+            $ref:  '#/components/schemas/EventParticipant'
+    EventParticipant:
+      description: Участник события
+      properties:
+        name:
+          format: string
+          type: string
+          description: Имя
+          example: Артист
+        eventId:
+          format: int32
+          type: integer
+          description: Id события
+          example: 3782
+        userId:
+          format: int32
+          type: integer
+          description: Id пользователя
+          example: 3782
+        isAccept:
+          format: boolean
+          type: boolean
+          description: Признак подтверждения участия артиста в событии
+          example: true, false
+        sum:
+          format: money
+          type: integer
+          description: Сумма, предлагаемая артистом за выступление
+          example: 500 000 р.
+    Alerts:
+      description: Список уведомлений
+      properties:
+        messages:
+          type: array
+          items:
+            $ref:  '#/components/schemas/Alert'
+    Alert:
+      description: Уведомление
+      properties:
+        title:
+          format: string
+          type: string
+          description: Загловок
+          example: Запуск ракеты
+        date:
+          format: date
+          type: string
+          description: Дата уведомления
+          example: 10.03.2020
+        recieverId:
+          format: int32
+          type: integer
+          description: Id получателя
+          example: 135
+        senderId:
+          format: int32
+          type: integer
+          description: Id отправителя
+          example: 154
+        description:
+          format: string
+          type: string
+          description: Текст уведомления
+          example: Запуск произойдет в 6 утра
+        eventId:
+          format: int32
+          type: integer
+          description: Id события
+          example: 45658
+        projectId:
+          format: int32
+          type: integer
+          description: Id проекта
+          example: 4579
+        typeId:
+          format: int32
+          type: integer
+          description: Id типа уведомления
+          example: 454,48
+    Participants:
+      description: Список участников проекта
+      properties:
+        messages:
+          type: array
+          items:
+            $ref:  '#/components/schemas/Participant'
+    Participant:
+      description: Создание участника проекта
+      properties:
+        name:
+          format: string
+          type: string
+          description: Имя участника
+          example: Илон Маск
+        projectId:
+          format: int32
+          type: integer
+          description: Id проекта
+          example: 1257
+        userId:
+          format: int32
+          type: integer
+          description: Id клиента
+          example: 14697
+        isAccept:
+          format: boolean
+          type: boolean
+          description: Признак утверждения на проект
+          example: true, false
+    Project:
+      description: Создание проекта (группы)
+      properties:
+        name:
+          format: string
+          type: string
+          description: Название
+          example: СтарЛинк
+        dateStart:
+          format: date
+          type: string
+          description: Дата начала проекта
+          example: 12.12.2018
+        dateEnd:
+          format: date
+          type: string
+          description: Дата завершения проекта
+          example: 12.12.2050
+        isPublic:
+          format: boolean
+          type: boolean
+          description: Признак публичности (видимости) (private, public)
+          example: true, false
+        participants:
+          type: array
+          items:
+            $ref:  '#/components/schemas/Participant'
+    MetaData:
+      description: Мета-данные файла
+      properties:
+        dateCreate:
+          format: date
+          type: string
+          description: дата загрузки
+          example: mm.dd.yyyy
+        size:
+          format:  int32
+          type: integer
+          description: размер файла
+          example: 5кB
+        path:
+          format: string
+          type: string
+          description: Номер телефона
+          example: //files/test.image
+        type:
+          format: string
+          type: string
+          description: Формат файла
+          example: image, pdf, xml
+    File:
+      description: "File"
+      properties:
+          fileName:
+            type: string
+            format: binary
+    Token:
+      description: Token
+      properties:
+        accessToken:
+          type: string
+          description: Access Token
+          example: "sdfgsdgis13"
+        refreshToken:
+          type: string
+          description: Refresh Token.
+          example: "sfafadgsdg45646"
+    Success:
+      description: "Выполнено успешно"
+      properties:
+          message:
+            type: string
+            description: 200 OK 
+            example: "Выполнено успешно"
+    Forbidden:
+      description: "Проведение операции запрещено"
+      properties:
+          message:
+            type: string
+            description: Forbidden 
+            example: "Проведение операции запрещено"
+    ManyRequests:
+      description: "429 Too Many Requests"
+      properties:
+          message:
+            type: string
+            description: 429 Too Many Requests  
+            example: "Превышен лимит запросов"
+    AuthError:
+      description: "Не авторизован"
+      properties:
+          message:
+            type: string
+            description: Unauthorized 
+            example: "Ошибка авторизации"
+    BadRequest:
+      description: "Некорректные поля запроса"
+      properties:
+          message:
+            type: string
+            description: Bad Request
+            example: "Ошибка на стороне клиента"
+    NotFound:
+      description: "Информация не найдена"
+      properties:
+          message:
+            type: string
+            description: Not found
+            example: "Информация не найдена"
+    ServerError:
+      description: "Ошибка сервера"
+      properties:
+          message:
+            type: string
+            description: Server Error
+            example: "Ошибка на стороне сервера"
+    ErrorLimit:
+      description: "Ошибка сервера"
+      properties:
+          message:
+            type: string
+            description: Server Error
+            example: "Превышение количества запросов"
+    UserLight:
+      description: Информация об акаунте пользователе
+      properties:
+        userName:
+          format: string
+          type: string
+          description: логин
+          example: AccountName
+        email:
+          format: string
+          type: string
+          description: почтовый адрес
+          example: googleAccount@gmail.com
+        phone:
+          format: string
+          type: string
+          description: Номер телефона
+          example: 8(985)125-02-44
+        token:
+          format: string
+          type: string
+          description: Токен
+          example: "sfhlsgsa789"
+    User:
+      description: Информация о пользователе. Передавать только измененные поля
+      properties:
+        userName:
+          format: string
+          type: string
+          description: логин
+          example: AccountName
+        email:
+          format: string
+          type: string
+          description: почтовый адрес
+          example: googleAccount@gmail.com
+        phone:
+          format: string
+          type: string
+          description: Номер телефона
+          example: 8(985)125-02-44
+        nickName:
+          format: string
+          type: string
+          description: Ник
+          example: Nick Name
+        description:
+          format: string
+          type: string
+          description: Краткое описание профиля
+          example: А я, просто, железный человек
+        avatar:
+          format: string
+          type: string
+          description: Имя файла из S3
+          example: StarLink.png
+        contact:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+    Contact:
+      description: Контактная иформация
+      properties:
+        contactType:
+          format: string
+          type: string
+          description: Тип контакта
+          example: email, vk, telegram, userSite, outSite
+        value: 
+          format: string
+          type: string
+          description: адрес, телефон, vk id
+          example: user@gmail.com, https://user_journal.ru
+        userId:
+          format: int32
+          type: integer
+          description:  Id пользователя
+          example: 4568
+        isConfirmed:
+          format: boolean
+          type: boolean
+          description: Подтверждение контактной информации
+          example: "true"
+        isNeedApprove:
+          format: boolean
+          type: boolean
+          description: Признак обязательного подтверждения информации
+          example: "true"
+        isPublic:
+          format: boolean
+          type: boolean
+          description: Сделать доступной информацию о контактных данных
+          example: "true"
+    Roles:
+      description: Роли пользователя
+      properties:
+        roles:
+          type: array
+          items:
+            $ref:  '#/components/schemas/Role'
+    Role:
+      description: роль
+      properties:
+          roleId:
+            format: int32
+            type: integer
+            description: The role ID.
+            example: 135
+          name:
+            format: string
+            type: string
+            description: название роли (Администратор, Пользователь).
+            example: 46878
+    Grants:
+      description: Права пользователя
+      properties:
+        grants:
+          type: array
+          items:
+            $ref:  '#/components/schemas/Grant'
+    Grant:
+      description: право
+      properties:
+        grantId:
+          format: int32
+          type: integer
+          example: 4681
+        roleId:
+          format: int32
+          type: integer
+          example: 4648
+        settingsJson:
+          format: string
+          type: string
+          example: 4689
+  parameters:
+    event_ids:
+      name: event_ids
+      required: true
+      description: Массив Id событий
+      schema:
+        type: array
+        items:
+          type: integer
+      in: path
+      style: form
+      explode: false
+      example:
+          value: [239, 158, 124]
+    project_ids:
+      name: project_ids
+      required: true
+      description: Массив Id проектов
+      schema:
+        type: array
+        items:
+          type: integer
+      in: path
+      style: form
+      explode: false
+      example:
+          value: [1593, 7025, 125]
+    dateStart:
+      name: dateStart
+      required: true
+      description: Дата, с которой начинается поиск уведомлений
+      schema:
+        format: date
+        type: string
+      in: path
+      example: 01.02.2023
+    dateEnd:
+      name: dateEnd
+      required: true
+      description: Дата окончания поиска уведомлений
+      schema:
+        format: date
+        type: string
+      in: path
+      example: 02.02.2023
+    alert_type:
+      name: alert_type
+      required: false
+      description: Тип уведомлений
+      schema:
+        format: string
+        type: string
+      in: path
+      example: "системные"
+    participant_ids:
+      name: participant_ids
+      required: true
+      description: Id участников проекта
+      schema:
+        type: array
+        items:
+          type: integer
+      in: path
+      style: form
+      explode: false
+      example:
+          value: [1, 5, 7]
+    project_id:
+      name: project_id
+      required: true
+      description: Id проекта
+      schema:
+        format: int32
+        type: integer
+      in: path
+      example: 1596
+    file_name:
+      name: file_name
+      required: true
+      description: имя файла
+      schema:
+        format: string
+        type: string
+      in: path
+      example: fileName.png ; fileName1.image ;
+    jwt_token:
+      name: jwt_token
+      required: true
+      description:  Токен
+      schema:
+        format: string
+        type: string
+      in: path
+      example: "468668dasd"
+    sms_code:
+      name: sms_code
+      required: true
+      description: Номер телефона
+      schema:
+        format: int32
+        type: integer
+      in: path
+      example: 1568
+    user_phone:
+      name: user_phone
+      required: true
+      description: Номер телефона
+      schema:
+        format: string
+        type: string
+      in: path
+      example: +7(923)125-26-33
+    user_name:
+      name: user_name
+      required: true
+      description: Имя пользователя
+      schema:
+        format: string
+        type: string
+      in: path
+      example: TestName
+    user_email:
+      name: user_email
+      required: true
+      description: Почта пользователя
+      schema:
+        format: string
+        type: string
+      in: path
+      example: xxxx@gmail.com
+    user_id:
+      name: user_id
+      required: true
+      description: Id пользователя
+      schema:
+        format: int32
+        type: integer
+      in: path
+      example: 48224
+    user_vkid:
+      name: user_vkid
+      required: true
+      description: Id в соц сети ВКонтакте
+      schema:
+        format: string
+        type: string
+      in: path
+      example: 546898
+    telegramId:
+      name: telegram_id
+      required: true
+      description: Id telegram
+      schema:
+        format: int32
+        type: integer
+      in: path
+      example: "@test456"
+    role_id:
+      name: role_id
+      required: true
+      description: Id пользователя
+      schema:
+        format: int32
+        type: integer
+      in: path
+      example: 4682
